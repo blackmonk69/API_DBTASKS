@@ -11,26 +11,16 @@ class task(SQLModel, table=True):
 sqlite_url = f"postgresql://neondb_owner:npg_eFCE9Qm7txMX@ep-lively-silence-aine4h5t-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # The engine is the central object to manage the database connection
-# connect_args={"check_same_thread": False} is needed for SQLite with FastAPI
+# 
 engine = create_engine(sqlite_url, echo=True)
 
-# Define the task model which is both a database table model and a Pydantic model
+
 
     
 # Function to create the database and tables on application startup 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
-'''
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Load the ML model
-    create_db_and_tables()
-   
-    
-# Initialize the FastAPI app
-app :FastAPI= FastAPI(lifespan=lifespan)
-'''
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,13 +58,3 @@ def read_tasks():
            tasks= session.exec(statement).all()
            return tasks
         
-'''
-# Path operation to read a single hero by ID
-@app.get("/heroes/{hero_id}", response_model=Hero)
-def read_hero(hero_id: int):
-    with Session(engine) as session:
-        hero = session.get(Hero, hero_id)
-        if not hero:
-            raise HTTPException(status_code=404, detail="Hero not found")
-        return hero
-'''
