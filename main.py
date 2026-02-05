@@ -1,0 +1,80 @@
+from typing import Optional, List
+from fastapi import FastAPI, HTTPException
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+import os
+from contextlib import asynccontextmanager
+
+class task(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    content: str = Field(index=True)
+
+sqlite_url = f"postgresql://neondb_owner:npg_eFCE9Qm7txMX@ep-lively-silence-aine4h5t-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+# The engine is the central object to manage the database connection
+# connect_args={"check_same_thread": False} is needed for SQLite with FastAPI
+engine = create_engine(sqlite_url, echo=True)
+
+# Define the task model which is both a database table model and a Pydantic model
+
+    
+# Function to create the database and tables on application startup 
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+'''
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
+    create_db_and_tables()
+   
+    
+# Initialize the FastAPI app
+app :FastAPI= FastAPI(lifespan=lifespan)
+'''
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Lógica al arrancar (Startup)
+    print("Iniciando aplicación y creando tablas...")
+    SQLModel.metadata.create_all(engine, checkfirst=True)
+    
+    yield  # <--- Esto separa el arranque del apagado
+    
+    # Lógica al cerrar (Shutdown)
+    print("Cerrando aplicación...")
+
+# 2. Pasa la función SIN paréntesis al inicializar FastAPI
+app = FastAPI(lifespan=lifespan)
+
+# Dependency to get a database session for each request
+#def get_session():
+ #   with Session(engine) as session:
+  #      yield session
+ 
+# Path operation to create a new task
+@app.post("/tasks/")
+def create_task(task_param: task):
+    with Session(engine) as session:
+        session.add(task_param)
+        session.commit()
+        session.refresh(task_param) # Refresh to get the generated ID from the DB
+        return task_param
+
+# Path operation to read all tasks
+@app.get("/tasks/")
+def read_tasks():
+    with Session(engine) as session:
+           statement = select(task)
+           tasks= session.exec(statement).all()
+           return tasks
+        
+'''
+# Path operation to read a single hero by ID
+@app.get("/heroes/{hero_id}", response_model=Hero)
+def read_hero(hero_id: int):
+    with Session(engine) as session:
+        hero = session.get(Hero, hero_id)
+        if not hero:
+            raise HTTPException(status_code=404, detail="Hero not found")
+        return hero
+'''
