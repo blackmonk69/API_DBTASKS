@@ -3,16 +3,25 @@ from fastapi import FastAPI, HTTPException
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Carga las variables del archivo .env
+load_dotenv()
+
+# Lee los valores
+sqlite_url2 = os.getenv("sqlite_url")
+
+if sqlite_url2 is None:
+    raise RuntimeError("sqlite_url no está definida en el archivo .env")
 
 class task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     content: str = Field(index=True)
-
-sqlite_url = f"postgresql://neondb_owner:npg_eFCE9Qm7txMX@ep-lively-silence-aine4h5t-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+#sqlite_url = f"postgresql://neondb_owner:npg_eFCE9Qm7txMX@ep-lively-silence-aine4h5t-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # The engine is the central object to manage the database connection
 # 
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(sqlite_url2, echo=True)
 
 
 
